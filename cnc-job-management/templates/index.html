@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNC Job Management Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        
+        .orbitron {
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .glow {
+            text-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8, 0 0 30px #38bdf8;
+        }
+        
+        .card-glow {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3), inset 0 0 20px rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        
+        .progress-glow {
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.8);
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Header -->
+    <header class="bg-slate-900/50 backdrop-blur-sm border-b border-cyan-500/30 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-3xl font-bold orbitron glow">CNC JOB MANAGEMENT</h1>
+                <div class="text-cyan-400 orbitron text-lg" id="digital-clock">--:--:--</div>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="openAddModal()" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded-lg font-semibold btn-glow transition-all duration-300">
+                    + Tambah Job
+                </button>
+                <a href="/history" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-semibold btn-glow transition-all duration-300">
+                    📊 History
+                </a>
+                <a href="/export_excel/jobs" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold btn-glow transition-all duration-300">
+                    📥 Export Excel
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dashboard Grid -->
+    <main class="container mx-auto p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-grid">
+            <!-- Machine cards will be populated by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Add/Edit Job Modal -->
+    <div id="job-modal" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50">
+        <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4 card-glow slide-in">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold orbitron glow" id="modal-title">Tambah Job Baru</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            
+            <form id="job-form" class="space-y-4">
+                <input type="hidden" id="job-id" value="">
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">Mesin</label>
+                    <select id="mesin" required class="w-full bg-slate-700 border border-cyan-500/30 rounded-lg px-3 py-2 focus:border-cyan-400 focus:outline-none">
+                        <option value="">Pilih Mesin</option>
+                        <option value="CNC1">CNC1</option>
+                        <option value="CNC2">CNC2</option>
+                        <option value="CNC3">CNC3</option>
+                        <option value="CNC4">CNC4</option>
+                        <option value="CNC5">CNC5</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">Job Type</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center">
+                            <input type="radio" name="job_type" value="current" class="mr-2">
+                            <span>Current</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="job_type" value="next" class="mr-2">
+                            <span>Next</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">MODEL</label>
+                        <input type="text" id="MODEL" required class="w-full bg-slate-700 border border-cyan-500/30 rounded-lg px-3 py-2 focus:border-cyan-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">PART</label>
+                        <input type="text" id="PART" required class="w-full bg-slate-700 border border-cyan-500/30 rounded-lg px-3 py-2 focus:border-cyan-400 focus:outline-none">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">SIZE</label>
+                    <input type="text" id="SIZE" required class="w-full bg-slate-700 border border-cyan-500/30 rounded-lg px-3 py-2 focus:border-cyan-400 focus:outline-none">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">START</label>
+                        <input type="datetime-local" id="START" class="w-full bg-slate-700 border border-cyan-500/30 rounded-lg px-3 py-2 focus:border-cyan-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">FINISH</label>
+                        <input type="datetime-local" id="FINISH" class="w-full bg-slate-700 border border-cyan-500/30 rounded-lg px-3 py-2 focus:border-cyan-400 focus:outline-none">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">ETC_H (Target)</label>
+                        <input type="text" id="ETC_H" required placeholder="4 H" class="w-full bg-slate-700 border border-cyan-500/30 rounded-lg px-3 py-2 focus:border-cyan-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">OPERATOR</label>
+                        <input type="text" id="OPERATOR" required class="w-full bg-slate-700 border border-cyan-500/30 rounded-lg px-3 py-2 focus:border-cyan-400 focus:outline-none">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">REMARK</label>
+                    <textarea id="REMARK" rows="3" class="w-full bg-slate-700 border border-cyan-500/30 rounded-lg px-3 py-2 focus:border-cyan-400 focus:outline-none"></textarea>
+                </div>
+                
+                <div class="flex space-x-3 pt-4">
+                    <button type="submit" class="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded-lg font-semibold btn-glow transition-all duration-300">
+                        Simpan
+                    </button>
+                    <button type="button" onclick="closeModal()" class="flex-1 bg-gray-600 hover:bg-gray-700 py-2 rounded-lg font-semibold transition-all duration-300">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
